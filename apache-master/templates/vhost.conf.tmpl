@@ -1,0 +1,44 @@
+<VirtualHost *:{{ getenv "APACHE_PORT" "80" }}>
+    DocumentRoot "{{ getenv "APACHE_DOCUMENT_ROOT" "/var/www/html" }}"
+    ServerName {{ getenv "APACHE_SERVER_NAME" "default" }}
+
+    Include conf/preset.conf
+
+    {{ if not (getenv "APACHE_LIMITED_ACCESS") }}
+    <Location />
+        Require all granted
+    </Location>
+    {{ end }}
+
+    <FilesMatch "^\.">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    <FilesMatch "\.(?:sh|sql|mysql|po|tpl|make|test)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    <FilesMatch "^wodby\.yml">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    <FilesMatch "^Makefile">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    <DirectoryMatch "^\.|\/\.">
+        Order allow,deny
+        Deny from all
+    </DirectoryMatch>
+
+    {{ if getenv "APACHE_HTTP2" }}
+    Protocols h2c http/1.1
+    {{ end }}
+
+    SetEnvIf Request_URI "^/\.healthz$" dontlog
+    RedirectMatch 204 .healthz
+</VirtualHost>
